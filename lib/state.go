@@ -15,6 +15,7 @@ import (
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/yl2chen/cidranger"
+	"github.com/oschwald/geoip2-golang"
 	"golang.org/x/net/html"
 	"log/slog"
 	"net"
@@ -27,6 +28,11 @@ import (
 	"sync"
 	"time"
 )
+
+type GeoIPCacheEntry struct {
+    IsoCode string
+    Name    string
+}
 
 type State struct {
 	client  *http.Client
@@ -53,6 +59,11 @@ type State struct {
 	tagCache *utils.DecayMap[string, []html.Node]
 
 	Mux *http.ServeMux
+
+	geoipDB *geoip2.Reader
+	geoipCache          map[string]GeoIPCacheEntry
+    maxGeoIPCacheSize   int
+
 }
 
 func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSettings) (state *State, err error) {
@@ -273,6 +284,14 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 			}
 		}
 	}()
+
+
+	db, err := geoip2.Open("GeoLite2-Country.mmdb")
+	if err != nil {
+		return nil, fmt.Errorf("failed to open GeoLite2-Country.mmdb: %w", err)
+	}
+	state.geoipDB = db
+	state.maxGeoIPCacheSize = 10000
 
 	return state, nil
 }

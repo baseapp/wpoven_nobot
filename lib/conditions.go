@@ -9,6 +9,7 @@ import (
 	"github.com/google/cel-go/common/types/ref"
 	"log/slog"
 	"net"
+	"strings"
 )
 
 func (state *State) initConditions() (err error) {
@@ -62,6 +63,179 @@ func (state *State) initConditions() (err error) {
 						}
 						return types.Bool(ok)
 					}
+				}),
+			),
+		),
+
+		cel.Function("country",
+			cel.MemberOverload("netIP_country_string",
+				[]*cel.Type{cel.BytesType, cel.StringType},
+				cel.BoolType,
+				cel.BinaryBinding(func(lhs ref.Val, rhs ref.Val) ref.Val {
+					var ip net.IP
+					switch v := lhs.Value().(type) {
+					case []byte:
+						ip = v
+					case net.IP:
+						ip = v
+					default:
+						panic(fmt.Errorf("invalid ip type %T, expected []byte or net.IP", lhs.Value()))
+					}
+
+					if ip == nil {
+						panic(fmt.Errorf("invalid ip %v", lhs.Value()))
+					}
+
+					countryValue, ok := rhs.Value().(string)
+					if !ok {
+						panic(fmt.Errorf("invalid country value %v, expected string", rhs.Value()))
+					}
+
+					// Check if we have a GeoIP database configured
+					if state.geoipDB == nil {
+						panic(fmt.Errorf("geoip database not configured"))
+					}
+
+					ipStr := ip.String()
+					
+					// Check cache first
+					var countryCode, countryName string
+					if cached, exists := state.geoipCache[ipStr]; exists {
+						countryCode = cached.IsoCode
+						countryName = cached.Name
+					} else {
+						// Lookup in database
+						record, err := state.geoipDB.Country(ip)
+						if err != nil {
+							// Cache negative results too
+							if state.geoipCache == nil {
+								state.geoipCache = make(map[string]GeoIPCacheEntry)
+							}
+							state.geoipCache[ipStr] = GeoIPCacheEntry{IsoCode: "", Name: ""}
+							return types.Bool(false)
+						}
+						
+						countryCode = record.Country.IsoCode
+						countryName = record.Country.Names["en"]
+						
+						// Add to cache (with simple size limit)
+						if state.geoipCache == nil {
+							state.geoipCache = make(map[string]GeoIPCacheEntry)
+						}
+						if len(state.geoipCache) < state.maxGeoIPCacheSize {
+							state.geoipCache[ipStr] = GeoIPCacheEntry{
+								IsoCode: countryCode,
+								Name:    countryName,
+							}
+						}
+					}
+
+					// If we cached a negative result
+					if countryCode == "" && countryName == "" {
+						return types.Bool(false)
+					}
+
+					// Normalize input for comparison
+					inputCountry := strings.ToUpper(strings.TrimSpace(countryValue))
+					
+					// Check against ISO country code (2-letter, e.g., "US", "GB")
+					if strings.ToUpper(countryCode) == inputCountry {
+						return types.Bool(true)
+					}
+
+					// Check against country name (e.g., "United States", "United Kingdom")
+					if strings.ToUpper(countryName) == inputCountry {
+						return types.Bool(true)
+					}
+
+					return types.Bool(false)
+				}),
+			),
+			cel.MemberOverload("netIP_country_list",
+				[]*cel.Type{cel.BytesType, cel.ListType(cel.StringType)},
+				cel.BoolType,
+				cel.BinaryBinding(func(lhs ref.Val, rhs ref.Val) ref.Val {
+					var ip net.IP
+					switch v := lhs.Value().(type) {
+					case []byte:
+						ip = v
+					case net.IP:
+						ip = v
+					default:
+						panic(fmt.Errorf("invalid ip type %T, expected []byte or net.IP", lhs.Value()))
+					}
+
+					if ip == nil {
+						panic(fmt.Errorf("invalid ip %v", lhs.Value()))
+					}
+
+					countryList, ok := rhs.Value().([]ref.Val)
+					if !ok {
+						panic(fmt.Errorf("invalid country list %v, expected []string", rhs.Value()))
+					}
+
+					// Check if we have a GeoIP database configured
+					if state.geoipDB == nil {
+						panic(fmt.Errorf("geoip database not configured"))
+					}
+
+					ipStr := ip.String()
+					
+					// Check cache first
+					var countryCode, countryName string
+					if cached, exists := state.geoipCache[ipStr]; exists {
+						countryCode = cached.IsoCode
+						countryName = cached.Name
+					} else {
+						// Lookup in database
+						record, err := state.geoipDB.Country(ip)
+						if err != nil {
+							// Cache negative results too
+							if state.geoipCache == nil {
+								state.geoipCache = make(map[string]GeoIPCacheEntry)
+							}
+							state.geoipCache[ipStr] = GeoIPCacheEntry{IsoCode: "", Name: ""}
+							return types.Bool(false)
+						}
+						
+						countryCode = record.Country.IsoCode
+						countryName = record.Country.Names["en"]
+						
+						// Add to cache (with simple size limit)
+						if state.geoipCache == nil {
+							state.geoipCache = make(map[string]GeoIPCacheEntry)
+						}
+						if len(state.geoipCache) < state.maxGeoIPCacheSize {
+							state.geoipCache[ipStr] = GeoIPCacheEntry{
+								IsoCode: countryCode,
+								Name:    countryName,
+							}
+						}
+					}
+
+					// If we cached a negative result
+					if countryCode == "" && countryName == "" {
+						return types.Bool(false)
+					}
+
+					actualCountryCode := strings.ToUpper(countryCode)
+					actualCountryName := strings.ToUpper(countryName)
+
+					// Check if IP's country matches any in the list
+					for _, countryVal := range countryList {
+						countryStr, ok := countryVal.Value().(string)
+						if !ok {
+							continue
+						}
+						
+						inputCountry := strings.ToUpper(strings.TrimSpace(countryStr))
+						
+						if actualCountryCode == inputCountry || actualCountryName == inputCountry {
+							return types.Bool(true)
+						}
+					}
+
+					return types.Bool(false)
 				}),
 			),
 		),

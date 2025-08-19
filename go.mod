@@ -27,6 +27,8 @@ require (
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/kevinpollet/nego v0.0.0-20211010160919-a65cd48cee43 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/oschwald/geoip2-golang v1.13.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
