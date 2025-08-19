@@ -2,3 +2,5 @@
 *.gz
 *.br
 *.zst
+*.exe
+go-away
