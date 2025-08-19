@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+{{$theme := "forgejo-auto"}}{{ if .Theme }}{{$theme = .Theme}}{{ end }}
+{{$logo := "/assets/img/logo.png"}}{{ if .Logo }}{{$logo = .Logo}}{{ end }}
+<html lang="en-US" data-theme="{{ $theme }}">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{{ .Title }}</title>
+    <meta name="referrer" content="origin">
+    {{ range .MetaTags }}
+    <meta {{ range $key, $value := . }}{{ $key | attr }}="{{ $value }}" {{end}}/>
+    {{ end }}
+    {{ range .LinkTags }}
+    <link {{ range $key, $value := . }}{{ $key | attr }}="{{ $value }}" {{end}}/>
+    {{ end }}
+    {{ range .HeaderTags }}
+    {{ . }}
+    {{ end }}
+
+
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="/assets/img/favicon.png" type="image/png">
+
+    <noscript>
+        <style>
+            .dropdown:hover > .menu { display: block; }
+            .ui.secondary.menu .dropdown.item > .menu { margin-top: 0; }
+        </style>
+    </noscript>
+
+    <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="/assets/css/theme-{{$theme}}.css">
+
+
+</head>
+<body hx-swap="outerHTML" hx-ext="morph" hx-push-url="false">
+
+
+<div class="full height">
+    <nav id="navbar" aria-label="Navigation bar">
+        <div class="navbar-left ui secondary menu">
+            <a class="item" id="navbar-logo" href="/" aria-label="Home">
+                <img width="30" height="30" src="/assets/img/logo.svg" alt="Logo" aria-hidden="true">
+            </a>
+        </div>
+    </nav>
+
+    <div class="home">
+        <div class="ui stackable middle very relaxed page grid">
+            <div class="sixteen wide center aligned centered column">
+                <div>
+                    <img class="logo" id="image" src="{{ $logo }}" />
+                </div>
+                <div class="hero">
+                    <h2 class="ui icon header title" id="title">
+                        {{ .Title }}
+                    </h2>
+
+                    {{if .Challenge }}
+                    <h3 id="status">{{ .Strings.Get "status_loading_challenge" }} <em>{{ .Challenge }}</em>...</h3>
+                    {{else if .Error}}
+                    <h3 id="status">{{ .Strings.Get "status_error" }} {{ .Error }}</h3>
+                    {{else}}
+                    <h3 id="status">{{ .Strings.Get "status_loading" }}</h3>
+                    {{end}}
+
+                    <details>
+                        <summary>{{ .Strings.Get "details_title" }}</summary>
+
+                        {{.Strings.Get "details_text"}}
+                    </details>
+
+                    {{if .Redirect }}
+                        <div class="button-row" style="margin-top: 2em; margin-bottom: 2em;" >
+                            <a role="button" class="ui small primary button" href="{{ .Redirect }}">{{ .Strings.Get "button_refresh_page" }}</a>
+                        </div>
+                    {{end}}
+
+                    {{if .EndTags }}
+                        <noscript>
+                            {{ .Strings.Get "noscript_warning" }}
+                        </noscript>
+                    {{end}}
+
+                    <p><small>{{ .Strings.Get "details_contact_admin_with_request_id" }}: <em>{{ .Id }}</em></small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>
+
+
+
+<footer class="page-footer" role="group" aria-label="">
+    <div class="left-links" role="contentinfo" aria-label="">
+        Protected by <a href="https://git.gammaspectra.live/git/go-away">go-away</a> :: Request Id <em>{{ .Id }}</em>
+        {{ range .Links }}
+            :: <a href="{{ .URL }}">{{ .Name }}</a>
+        {{ end }}
+    </div>
+</footer>
+
+{{ range .EndTags }}
+    {{ . }}
+{{ end }}
+
+</body>
+</html>
