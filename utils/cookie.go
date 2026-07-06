@@ -13,29 +13,40 @@ var DefaultCookiePrefix = ".go-away-"
 func getValidHost(host string) string {
 	ipStr, _, err := net.SplitHostPort(host)
 	if err != nil {
-		return host
+		ipStr = host
+	}
+	if len(ipStr) > 0 && ipStr[0] == '[' && ipStr[len(ipStr)-1] == ']' {
+		ipStr = ipStr[1 : len(ipStr)-1]
 	}
 	return ipStr
 }
 
 func SetCookie(name, value string, expiry time.Time, w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
+	cookie := &http.Cookie{
 		Name:     name,
 		Value:    value,
 		Expires:  expiry,
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
-		Domain:   getValidHost(r.Host),
-	})
+	}
+	host := getValidHost(r.Host)
+	if host != "localhost" && net.ParseIP(host) == nil {
+		cookie.Domain = host
+	}
+	http.SetCookie(w, cookie)
 }
 
 func ClearCookie(name string, w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
+	cookie := &http.Cookie{
 		Name:     name,
 		Value:    "",
 		Expires:  time.Now().Add(-1 * time.Hour),
 		MaxAge:   -1,
 		SameSite: http.SameSiteLaxMode,
-		Domain:   getValidHost(r.Host),
-	})
+	}
+	host := getValidHost(r.Host)
+	if host != "localhost" && net.ParseIP(host) == nil {
+		cookie.Domain = host
+	}
+	http.SetCookie(w, cookie)
 }

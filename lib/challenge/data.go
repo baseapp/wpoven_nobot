@@ -261,7 +261,7 @@ func (d *RequestData) verifyChallenge(reg *Registration, key Key) (verifyResult 
 		verifyState = VerifyStateNone
 	} else {
 		verifyResult, verifyState, err = d.VerifyChallengeToken(reg, token, key)
-		if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		if err != nil && !errors.Is(err, http.ErrNoCookie) && !errors.Is(err, ErrVerifyKeyMismatch) {
 			// clear invalid state
 			d.ClearChallengeToken(reg)
 		}
