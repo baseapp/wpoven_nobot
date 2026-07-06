@@ -2,13 +2,14 @@ package action
 
 import (
 	"fmt"
+	"log/slog"
+	"net/http"
+	"strings"
+
 	"git.gammaspectra.live/git/go-away/lib/challenge"
 	"git.gammaspectra.live/git/go-away/lib/policy"
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
-	"log/slog"
-	"net/http"
-	"strings"
 )
 
 func init() {
@@ -120,6 +121,29 @@ func (a Challenge) Handle(logger *slog.Logger, w http.ResponseWriter, r *http.Re
 		if data.HasValidChallenge(reg.Id()) {
 
 			data.State.ChallengeChecked(r, reg, r.URL.String(), logger)
+
+			hasGoAwayParams := false
+			q := r.URL.Query()
+			for k := range q {
+				if strings.HasPrefix(k, challenge.QueryArgPrefix) {
+					hasGoAwayParams = true
+					break
+				}
+			}
+			if (r.Method == http.MethodGet || r.Method == http.MethodHead) && hasGoAwayParams {
+				cleanUri := *r.URL
+				cleanQuery := cleanUri.Query()
+				for k := range cleanQuery {
+					if strings.HasPrefix(k, challenge.QueryArgPrefix) {
+						cleanQuery.Del(k)
+					}
+				}
+				cleanUri.RawQuery = cleanQuery.Encode()
+
+				data.ResponseHeaders(w)
+				http.Redirect(w, r, cleanUri.String(), http.StatusTemporaryRedirect)
+				return false, nil
+			}
 
 			if a.Continue {
 				return true, nil
