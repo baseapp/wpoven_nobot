@@ -40,11 +40,6 @@ var DefaultKeyHeaders = []string{
 	"User-Agent",
 	// Accept headers
 	"Accept-Language",
-	"Accept-Encoding",
-
-	// NOTE: not sent in preload
-	"Sec-Ch-Ua",
-	"Sec-Ch-Ua-Platform",
 }
 
 var MinimalKeyHeaders = []string{
