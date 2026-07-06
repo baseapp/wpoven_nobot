@@ -13,15 +13,17 @@ var DefaultStrings = utils.NewStrings(map[string]string{
 	"details_title": "Why am I seeing this?",
 	"details_text": `
 <p>
-	You are seeing this because the administrator of this website has set up <a href="https://git.gammaspectra.live/git/go-away">go-away</a> 
-	to protect the server against the scourge of <a href="https://thelibre.news/foss-infrastructure-is-under-attack-by-ai-companies/">AI companies aggressively scraping websites</a>.
+    You are seeing this page because this website is protected by a Web Application Firewall (WAF) 
+    designed to mitigate malicious scanning, automated vulnerability probing, and malware distribution.
 </p>
 <p>
-	Mass scraping can and does cause downtime for the websites, which makes their resources inaccessible for everyone.
+    Automated mass scanning and aggressive request volumes can degrade server performance, 
+    causing downtime and making resources inaccessible for legitimate visitors.
 </p>
 <p>
-	Please note that some challenges requires the use of modern JavaScript features and some plugins may disable these.
-	Disable such plugins for this domain (for example, JShelter) if you encounter any issues.
+    <strong>Note:</strong> Security verification challenges require modern JavaScript features. 
+    If you are experiencing issues, please ensure security plugins that disable JavaScript 
+    (such as JShelter) are temporarily paused or whitelisted for this domain.
 </p>
 `,
 	"details_contact_admin_with_request_id": "If you have any issues contact the site administrator and provide the following Request Id",
