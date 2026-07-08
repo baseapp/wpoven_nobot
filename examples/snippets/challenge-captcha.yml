@@ -1,0 +1,4 @@
+challenges:
+  # Alphanumeric CAPTCHA challenge (distorted SVG image, input form validation to prevent automated bots)
+  captcha:
+    runtime: "captcha"

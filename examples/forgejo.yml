@@ -323,7 +323,7 @@ rules:
   - name: standard-browser
     action: challenge
     settings:
-      challenges: [http-cookie-check, preload-link, meta-refresh, resource-load, js-refresh, js-pow-sha256]
+      challenges: [http-cookie-check, preload-link, meta-refresh, resource-load, js-refresh, js-pow-sha256, captcha]
     conditions:
       - '($is-generic-browser)'
 

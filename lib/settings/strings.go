@@ -37,4 +37,10 @@ var DefaultStrings = utils.NewStrings(map[string]string{
 	"status_challenge_success":   "Challenge success!",
 	"status_challenge_done_took": "Done! Took",
 	"status_error":               "Error:",
+
+	"title_captcha":             "Security Check Required",
+	"captcha_instruction":       "Please type the characters you see in the image below to access the website.",
+	"captcha_input_placeholder": "Verification code",
+	"captcha_submit_button":     "Verify",
+	"captcha_error_incorrect":   "Incorrect code. Please try again.",
 })

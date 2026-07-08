@@ -2,6 +2,7 @@ package lib
 
 import (
 	_ "git.gammaspectra.live/git/go-away/lib/challenge/cookie"
+	_ "git.gammaspectra.live/git/go-away/lib/challenge/captcha"
 	_ "git.gammaspectra.live/git/go-away/lib/challenge/dnsbl"
 	_ "git.gammaspectra.live/git/go-away/lib/challenge/http"
 	_ "git.gammaspectra.live/git/go-away/lib/challenge/preload-link"

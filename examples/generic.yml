@@ -179,7 +179,7 @@ rules:
   - name: standard-browser
     action: challenge
     settings:
-      challenges: [preload-link, meta-refresh, resource-load, js-refresh]
+      challenges: [preload-link, meta-refresh, resource-load, js-refresh, captcha]
     conditions:
       - '($is-generic-browser)'
 

@@ -56,7 +56,27 @@
                         {{ .Title }}
                     </h2>
 
-                    {{if .Challenge }}
+                    {{if .CaptchaSVG}}
+                    <div style="margin-top: 1.5rem; margin-bottom: 1.5rem; text-align: center;">
+                        <p style="margin-bottom: 1rem; font-size: 1.05rem; line-height: 1.5;">{{ .Strings.Get "captcha_instruction" }}</p>
+                        <div style="margin-bottom: 1.2rem; display: flex; justify-content: center;">
+                            {{ .CaptchaSVG }}
+                        </div>
+                        {{if .Error}}
+                        <p style="color: #ea6962; font-weight: bold; margin-bottom: 1rem;">{{ .Error }}</p>
+                        {{end}}
+                        <form method="POST" action="{{ .VerifyURL }}">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
+                                <input type="text" name="captcha_input" placeholder="{{ .Strings.Get "captcha_input_placeholder" }}" required autocomplete="off" autofocus
+                                       style="padding: 0.65rem; border-radius: 6px; border: 1px solid #444; background-color: #222; color: #fff; text-align: center; font-size: 1.25rem; letter-spacing: 0.15rem; width: 220px; outline: none;" />
+                                <button type="submit" class="ui small primary button"
+                                        style="padding: 0.65rem 1.5rem; border-radius: 6px; font-size: 1.05rem; cursor: pointer; font-weight: bold; width: 220px;">
+                                    {{ .Strings.Get "captcha_submit_button" }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {{else if .Challenge }}
                     <h3 id="status">{{ .Strings.Get "status_loading_challenge" }} <em>{{ .Challenge }}</em>...</h3>
                     {{else if .Error}}
                     <h3 id="status">{{ .Strings.Get "status_error" }} {{ .Error }}</h3>
