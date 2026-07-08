@@ -117,6 +117,29 @@ type Challenge struct {
 
 func (a Challenge) Handle(logger *slog.Logger, w http.ResponseWriter, r *http.Request, done func() (backend http.Handler)) (next bool, err error) {
 	data := challenge.RequestDataFromContext(r.Context())
+
+	var captchaReg *challenge.Registration
+	for _, reg := range a.Challenges {
+		if reg.Name == "captcha" {
+			captchaReg = reg
+			break
+		}
+	}
+
+	if captchaReg != nil && !data.HasValidChallenge(captchaReg.Id()) {
+		if data.ChallengeVerify[captchaReg.Id()] != challenge.VerifyResultSkip {
+			expiry := data.Expiration(captchaReg.Duration)
+			key := challenge.GetChallengeKeyForRequest(data.State, captchaReg, expiry, r)
+			result := captchaReg.IssueChallenge(w, r, key, expiry)
+			if result != challenge.VerifyResultSkip {
+				data.State.ChallengeIssued(r, captchaReg, r.URL.String(), logger)
+			}
+			data.ChallengeVerify[captchaReg.Id()] = result
+			data.ChallengeState[captchaReg.Id()] = challenge.VerifyStatePass
+			return false, nil
+		}
+	}
+
 	for _, reg := range a.Challenges {
 		if data.HasValidChallenge(reg.Id()) {
 
