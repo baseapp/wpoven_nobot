@@ -10,6 +10,7 @@ import (
 	"math/big"
 	unsaferand "math/rand/v2"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -36,11 +37,10 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 		svgContent := generateSVG(captchaText)
 
 		// Action URL for the form submission
-		verifyURI, err := challenge.RedirectUrl(r, reg)
+		verifyURI, err := getVerifyURI(r, reg)
 		if err != nil {
 			return challenge.VerifyResultFail
 		}
-		verifyURI.Path = reg.Path + "/verify"
 
 		state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
 			"Title":      state.Strings().Get("title_captcha"),
@@ -104,12 +104,11 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 			// Show the page again with an error
 			svgContent := generateSVG(captchaText)
 
-			verifyURI, err := challenge.RedirectUrl(r, reg)
+			verifyURI, err := getVerifyURI(r, reg)
 			if err != nil {
 				state.ErrorPage(w, r, http.StatusInternalServerError, err, "")
 				return
 			}
-			verifyURI.Path = reg.Path + "/verify"
 
 			state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
 				"Title":      state.Strings().Get("title_captcha"),
@@ -252,4 +251,23 @@ func getRandomColor(alpha float64) string {
 	s := 70 + unsaferand.IntN(30)
 	l := 50 + unsaferand.IntN(20)
 	return fmt.Sprintf("hsla(%d, %d%%, %d%%, %.2f)", h, s, l, alpha)
+}
+
+func getVerifyURI(r *http.Request, reg *challenge.Registration) (*url.URL, error) {
+	redirectURI, err := challenge.RedirectUrl(r, reg)
+	if err != nil {
+		return nil, err
+	}
+
+	verifyURI := new(url.URL)
+	verifyURI.Path = reg.Path + "/verify"
+
+	data := challenge.RequestDataFromContext(r.Context())
+	values, _ := utils.ParseRawQuery(r.URL.RawQuery)
+	values.Set(challenge.QueryArgRequestId, url.QueryEscape(data.Id.String()))
+	values.Set(challenge.QueryArgRedirect, url.QueryEscape(redirectURI.String()))
+	values.Set(challenge.QueryArgChallenge, url.QueryEscape(reg.Name))
+	verifyURI.RawQuery = utils.EncodeRawQuery(values)
+
+	return verifyURI, nil
 }
